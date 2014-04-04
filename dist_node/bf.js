@@ -1,7 +1,8 @@
 /*
- * THIS FILE IS AUTO GENERATED from 'lib/bf.kep'
+ * THIS FILE IS AUTO GENERATED FROM 'lib/bf.kep'
  * DO NOT EDIT
-*/"use strict";
+*/
+"use strict";
 var __o = require("akh")["base"],
     sequence = __o["sequence"],
     sequencea = __o["sequencea"],
@@ -32,7 +33,13 @@ var __o = require("akh")["base"],
     zipper = require("neith")["zipper"],
     __o4 = require("neith")["list"],
     listZipperIn = __o4["listZipperIn"],
-    evaluateStream, evaluate, parse, x, x0, eof, charCode = Function.prototype.call.bind(String.prototype.charCodeAt),
+    __add = (function(x, y) {
+        return (x + y);
+    }),
+    __subr = (function(x, y) {
+        return (y - x);
+    }),
+    evaluateStream, evaluate, parse, eof, charCode = Function.prototype.call.bind(String.prototype.charCodeAt),
     fromCharCode = String.fromCharCode,
     op = oneOf("><+-.,"),
     other = many(noneOf("><+-.,[]")),
@@ -42,24 +49,24 @@ var __o = require("akh")["base"],
     }));
 (parse = run.bind(null, program));
 var M = ZipperT(State),
-    inc = M.move(zipper.modify.bind(null, ((x = 1), (function(y) {
-        return (x + y);
-    })))),
-    dec = M.move(zipper.modify.bind(null, ((x0 = 1), (function(y) {
-        return (y - x0);
-    })))),
+    inc = M.move(zipper.modify.bind(null, (function(y) {
+        return (1 + y);
+    }))),
+    dec = M.move(zipper.modify.bind(null, (function(y) {
+        return (y - 1);
+    }))),
     right = M.move(zipper.right),
     left = M.move(zipper.left),
     set = (function(x) {
         return M.move(zipper.replace.bind(null, x));
     }),
     loop = (function(body) {
-        var loop = M.extract.chain((function(x) {
-            return ((x === 0) ? M.of(null) : sequence(body, loop));
+        var loop0 = M.extract.chain((function(x) {
+            return ((x === 0) ? M.of(null) : sequence(body, loop0));
         }));
-        return loop;
+        return loop0;
     }),
-    get = ((eof = set(0)), M.lift(State.get)
+    get = ((eof = M.move(zipper.replace.bind(null, 0))), M.lift(State.get)
         .chain((function(i) {
             return (isEmpty(i) ? eof : sequence(set(first(i)), M.lift(M.inner.modify(rest))));
         }))),
@@ -83,19 +90,25 @@ var M = ZipperT(State),
                 case ",":
                     return get;
                 default:
-                    return loop(sequencea(semantics(x)));
+                    {
+                        var body = sequencea(semantics(x)),
+                            loop0 = M.extract.chain((function(x0) {
+                                return ((x0 === 0) ? M.of(null) : sequence(body, loop0));
+                            }));
+                        return loop0;
+                    }
             }
         }));
     }),
     memory = listZipperIn(NIL, 0, repeat(Infinity, 0)),
-    exec = (function(program, input) {
-        return State.evalState(ZipperT.runZipperT(program, memory), map(charCode, input));
+    exec = (function(program0, input) {
+        return State.evalState(ZipperT.runZipperT(program0, memory), map(charCode, input));
     });
-(evaluateStream = (function(program, input) {
-    return exec(sequencea(semantics(parse(program))), input);
+(evaluateStream = (function(program0, input) {
+    return exec(sequencea(semantics(parse(program0))), input);
 }));
-(evaluate = (function(program, input) {
-    return evaluateStream(program, stream.from(input));
+(evaluate = (function(program0, input) {
+    return evaluateStream(program0, stream.from(input));
 }));
 (exports["evaluateStream"] = evaluateStream);
 (exports["evaluate"] = evaluate);
