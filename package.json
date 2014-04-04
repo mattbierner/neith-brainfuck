@@ -1,6 +1,6 @@
 {
     "name": "neith-brainfuck",
-    "version": "0.0.0",
+    "version": "0.0.2",
     "description": "Basic brainfuck",
     "author": "Matt Bierner",
     "license": "MIT",
