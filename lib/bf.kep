@@ -59,18 +59,30 @@ in {
  ******************************************************************************/
 var move := \op -> \z i -> [op z, i];
 
-var then := \a b -> \z i -> let [zi ii] = a(z, i) in b(zi, ii);
-
-var seqa := \arr -> Array.prototype.reduce.call(arr, then);
-
-var seq := \args(...) -> seqa(args);
-
+// Basic
+////////////////////////////////////////
 var inc := move zipper.modify@(+, 1);
 var dec := move zipper.modify@(_ -, 1);
 
 var right := move zipper.right;
 var left := move zipper.left;
 
+// Iteration/Sequencing
+////////////////////////////////////////
+var then := \a b -> \z i -> let [zi ii] = a(z, i) in b(zi, ii);
+
+var seqa := \arr -> Array.prototype.reduce.call(arr, then);
+
+var seq := \args(...) -> seqa(args);
+
+var loop := \body ->
+    function loop \z i -> 
+        ?zipper.extract(z) === 0
+            :[z, i]
+            :seq(body, loop)(z, i);
+
+// IO
+////////////////////////////////////////
 static console;
 
 var get := let
@@ -86,16 +98,8 @@ var put := move \ z -> {
     return z;
 };
 
-var loop := \body ->
-    function loop \z i -> 
-        ?zipper.extract(z) === 0
-            :[z, i]
-            :seq(
-                seqa body,
-                loop)(z, i);
-
-// Sematics
-////////////////////////////////////////
+/* Mapping
+ ******************************************************************************/
 var semantics = \code ->
     code.map \x -> {
         switch (x) {
@@ -105,7 +109,7 @@ var semantics = \code ->
         case '<': return left;
         case '.': return put;
         case ',': return get;
-        default:  return loop <| semantics x;
+        default:  return loop <| seqa <| semantics x;
         }
     };
 

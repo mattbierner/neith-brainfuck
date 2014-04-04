@@ -40,6 +40,14 @@
             return [op(z), i];
         });
     }),
+        inc = move(zipper.modify.bind(null, ((x = 1), (function(y) {
+            return (x + y);
+        })))),
+        dec = move(zipper.modify.bind(null, ((x0 = 1), (function(y) {
+            return (y - x0);
+        })))),
+        right = move(zipper.right),
+        left = move(zipper.left),
         then = (function(a, b) {
             return (function(z, i) {
                 var __o = a(z, i),
@@ -55,14 +63,11 @@
             var args = arguments;
             return seqa(args);
         }),
-        inc = move(zipper.modify.bind(null, ((x = 1), (function(y) {
-            return (x + y);
-        })))),
-        dec = move(zipper.modify.bind(null, ((x0 = 1), (function(y) {
-            return (y - x0);
-        })))),
-        right = move(zipper.right),
-        left = move(zipper.left),
+        loop = (function(body) {
+            return (function loop(z, i) {
+                return ((zipper.extract(z) === 0) ? [z, i] : seq(body, loop)(z, i));
+            });
+        }),
         get = ((eof = move(zipper.replace.bind(null, 0))), (function(z, i) {
             return (isEmpty(i) ? eof : [zipper.replace(first(i), z), rest(i)]);
         })),
@@ -70,11 +75,6 @@
             console.log(fromCharCode(zipper.extract(z)));
             return z;
         })),
-        loop = (function(body) {
-            return (function loop(z, i) {
-                return ((zipper.extract(z) === 0) ? [z, i] : seq(seqa(body), loop)(z, i));
-            });
-        }),
         semantics = (function(code) {
             return code.map((function(x) {
                 switch (x) {
@@ -91,7 +91,7 @@
                     case ",":
                         return get;
                     default:
-                        return loop(semantics(x));
+                        return loop(seqa(semantics(x)));
                 }
             }));
         }),
