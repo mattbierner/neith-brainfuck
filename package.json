@@ -1,18 +1,15 @@
 {
-    "name": "neith",
-    "version": "1.6.0",
-    "description": "Javascript Zipper Library",
+    "name": "neith-brainfuck",
+    "version": "0.0.0",
+    "description": "Basic brainfuck",
     "author": "Matt Bierner",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git://github.com/mattbierner/neith.js.git"
+        "url": "git://github.com/mattbierner/neith-brainfuck.git"
     },
     "keywords": [
-        "zipper",
-        "functional",
-        "data structure",
-        "tree"
+        "brainfuck"
     ],
     
     "main": "dist_node/bf.js",
@@ -27,13 +24,13 @@
         "test.js"
     ],
     "dependencies": {
-    "akh": ">=1.1.0",
+        "akh": ">=1.1.0",
+        "zipper-m": "0.1.x",
     
-    "nu-stream": "3.2.x",
+        "nu-stream": "3.2.x",
     
-    
-     "neith": ">=1.6.0",
-     "bennu": "17.0.x"
+        "neith": ">=1.6.0",
+        "bennu": "17.0.x"
     },
     "devDependencies": {
         "nodeunit": "0.8.x"

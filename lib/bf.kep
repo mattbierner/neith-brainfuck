@@ -1,8 +1,17 @@
+/**
+ * @fileOverview Very basic Brainfuck interpreter.
+ * 
+ * Does not use real IO but a state for input and console for output.
+ */
 package (
     evaluateStream
     evaluate
     parse)
 with
+    import 'akh::base' {sequence sequencea},
+    import 'akh::state' State,
+    import 'zipper-m::trans::zipper' ZipperT,
+    
     import 'bennu::parse' {
         rec
         run
@@ -18,19 +27,12 @@ with
         oneOf
         noneOf},
         
-    import 'nu-stream::stream' stream#{
-        first
-        rest
-        isEmpty
-        map
-        NIL},
+    import 'nu-stream::stream' stream#{first rest isEmpty map NIL},
     import 'nu-stream::gen' {repeat},
         
     import 'neith::zipper' zipper,
     import 'neith::list' {listZipperIn}
 in {
-
-var id := \x -> x;
 
 var charCode := Function.prototype.call.bind(String.prototype.charCodeAt);
 var fromCharCode := String.fromCharCode;
@@ -55,53 +57,52 @@ in {
     parse = run @ program;
 }
 
-/* Sematics
+/* Semantics
  ******************************************************************************/
-var move := \op -> \z i -> [op z, i];
+var M = ZipperT (State);
 
 // Basic
 ////////////////////////////////////////
-var inc := move zipper.modify@(+, 1);
-var dec := move zipper.modify@(_ -, 1);
+var inc := M.move zipper.modify@(+, 1);
+var dec := M.move zipper.modify@(_ -, 1);
 
-var right := move zipper.right;
-var left := move zipper.left;
+var right := M.move zipper.right;
+var left := M.move zipper.left;
+
+var set = \x -> M.move  zipper.replace@x;
 
 // Iteration/Sequencing
 ////////////////////////////////////////
-var then := \a b -> \z i -> let [zi ii] = a(z, i) in b(zi, ii);
-
-var seqa := \arr -> Array.prototype.reduce.call(arr, then);
-
-var seq := \args(...) -> seqa(args);
-
-var loop := \body ->
-    function loop \z i -> 
-        ?zipper.extract(z) === 0
-            :[z, i]
-            :seq(body, loop)(z, i);
+var loop := \body -> let
+    loop := M.extract.chain \ x ->
+        ?x === 0
+            :M.of(null)
+            :sequence(body, loop)
+in loop;
 
 // IO
 ////////////////////////////////////////
 static console;
 
 var get := let
-    eof = move zipper.replace@0
+    eof = set 0
 in
-    \z i ->
+    (M.lift State.get).chain \ i ->
         ?isEmpty i
             :eof
-            :[zipper.replace(first i, z), rest i];
+            :sequence(
+                set <| first i,
+                M.lift (M.inner.modify rest));
 
-var put := move \ z -> {
-    console.log(fromCharCode(zipper.extract z));
-    return z;
+var put := M.extract.map \ x -> {
+    console.log(fromCharCode(x));
+    return x;
 };
 
 /* Mapping
  ******************************************************************************/
 var semantics = \code ->
-    code.map \x -> {
+    code.map \ x -> {
         switch (x) {
         case '+': return inc;
         case '-': return dec;
@@ -109,7 +110,7 @@ var semantics = \code ->
         case '<': return left;
         case '.': return put;
         case ',': return get;
-        default:  return loop <| seqa <| semantics x;
+        default:  return loop <| sequencea <| semantics x;
         }
     };
 
@@ -118,14 +119,18 @@ var semantics = \code ->
 var memory := listZipperIn(NIL, 0, repeat(Infinity, 0));
 
 var exec = \program input ->
-    program(memory, map(charCode, input));
+    State.evalState(
+        ZipperT.runZipperT(program, memory),
+        map(charCode, input));
 
 evaluateStream = \program input ->
     exec(
-        seqa(semantics(parse(program))),
+        sequencea <| semantics <| parse program,
         input);
 
 evaluate = \program input ->
-    evaluateStream(program, stream.from input);
+    evaluateStream(
+        program,
+        stream.from input);
 
 }
