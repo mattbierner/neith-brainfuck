@@ -1,0 +1,127 @@
+package (
+    evaluateStream
+    evaluate
+    parse)
+with
+    import 'bennu::parse' {
+        rec
+        run
+        eager
+        either
+        next
+        many},
+    import 'bennu::lang' {
+        between
+        sepEndBy},
+    import 'bennu::text' {
+        character
+        oneOf
+        noneOf},
+        
+    import 'nu-stream::stream' stream#{
+        first
+        rest
+        isEmpty
+        map
+        NIL},
+    import 'nu-stream::gen' {repeat},
+        
+    import 'neith::zipper' zipper,
+    import 'neith::list' {listZipperIn}
+in {
+
+var id := \x -> x;
+
+var charCode := Function.prototype.call.bind(String.prototype.charCodeAt);
+var fromCharCode := String.fromCharCode;
+
+/* Parser
+ ******************************************************************************/
+with
+    op := oneOf '><+-.,',
+    
+    other := many <| noneOf "><+-.,[]",
+    
+    block := between @ (character '[', character ']'),
+    
+    program := rec\self ->
+        next(
+            other,
+            eager <| sepEndBy(other,
+                either(
+                    op,
+                    block self)))
+in {
+    parse = run @ program;
+}
+
+/* Sematics
+ ******************************************************************************/
+var move := \op -> \z i -> [op z, i];
+
+var then := \a b -> \z i -> let [zi ii] = a(z, i) in b(zi, ii);
+
+var seqa := \arr -> Array.prototype.reduce.call(arr, then);
+
+var seq := \args(...) -> seqa(args);
+
+var inc := move zipper.modify@(+, 1);
+var dec := move zipper.modify@(_ -, 1);
+
+var right := move zipper.right;
+var left := move zipper.left;
+
+static console;
+
+var get := let
+    eof = move zipper.replace@0
+in
+    \z i ->
+        ?isEmpty i
+            :eof
+            :[zipper.replace(first i, z), rest i];
+
+var put := move \ z -> {
+    console.log(fromCharCode(zipper.extract z));
+    return z;
+};
+
+var loop := \body ->
+    function loop \z i -> 
+        ?zipper.extract(z) === 0
+            :[z, i]
+            :seq(
+                seqa body,
+                loop)(z, i);
+
+// Sematics
+////////////////////////////////////////
+var semantics = \code ->
+    code.map \x -> {
+        switch (x) {
+        case '+': return inc;
+        case '-': return dec;
+        case '>': return right;
+        case '<': return left;
+        case '.': return put;
+        case ',': return get;
+        default:  return loop <| semantics x;
+        }
+    };
+
+/* Evaluation
+ ******************************************************************************/
+var memory := listZipperIn(NIL, 0, repeat(Infinity, 0));
+
+var exec = \program input ->
+    program(memory, map(charCode, input));
+
+evaluateStream = \program input ->
+    exec(
+        seqa(semantics(parse(program))),
+        input);
+
+evaluate = \program input ->
+    evaluateStream(program, stream.from input);
+
+}

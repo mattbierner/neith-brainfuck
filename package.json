@@ -1,0 +1,45 @@
+{
+    "name": "neith",
+    "version": "1.6.0",
+    "description": "Javascript Zipper Library",
+    "author": "Matt Bierner",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/mattbierner/neith.js.git"
+    },
+    "keywords": [
+        "zipper",
+        "functional",
+        "data structure",
+        "tree"
+    ],
+    
+    "main": "dist_node/bf.js",
+    "directories": {
+        "lib": "dist_node"
+    },
+    "files": [
+        "dist_node/",
+        "lib/",
+        "examples/",
+        "tests/",
+        "test.js"
+    ],
+    "dependencies": {
+    "akh": ">=1.1.0",
+    
+    "nu-stream": "3.2.x",
+    
+    
+     "neith": ">=1.6.0",
+     "bennu": "17.0.x"
+    },
+    "devDependencies": {
+        "nodeunit": "0.8.x"
+    },
+    
+    "scripts": {
+        "test": "node test.js"
+    }
+}
